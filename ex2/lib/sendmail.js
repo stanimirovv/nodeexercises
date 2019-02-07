@@ -24,32 +24,39 @@ const querystring = require('querystring');
 
 function sendMail(sendTo, emailBody) {
   // Build request
-  const postData = buildPostData(sendTo, emailBody);
-  const stringPayload = querystring.stringify(postData);
-  const options = buildOptions(stringPayload);
+  return new Promise( (resolve, reject) => {
+    const postData = buildPostData(sendTo, emailBody);
+    const stringPayload = querystring.stringify(postData);
+    const options = buildOptions(stringPayload);
 
-  console.log(options);
-  console.log(stringPayload);
+    console.log(options);
+    console.log(stringPayload);
 
-  // Send request and parse response
-  const req = https.request(options, (res) => {
-    console.log(`STATUS: ${res.statusCode}`);
-    console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
-    res.setEncoding('utf8');
-    res.on('data', (chunk) => {
-      console.log(`BODY: ${chunk}`);
+    // Send request and parse response
+    const req = https.request(options, (res) => {
+      console.log(`STATUS: ${res.statusCode}`);
+      console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => {
+        console.log(`BODY: ${chunk}`);
+      });
+      res.on('end', () => {
+        if (res.statusCode != 200 ) {
+          return reject('Status not 200');
+        }
+        console.log('No more data in response.');
+        return resolve('OK');
+      });
     });
-    res.on('end', () => {
-      console.log('No more data in response.');
+
+    req.on('error', (e) => {
+      console.error(`problem with request: ${e.message}`);
+      reject(e);
     });
-  });
 
-  req.on('error', (e) => {
-    console.error(`problem with request: ${e.message}`);
+    req.write(stringPayload);
+    req.end();
   });
-
-  req.write(stringPayload);
-  req.end();
 }
 
 /* 

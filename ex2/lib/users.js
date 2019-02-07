@@ -1,7 +1,7 @@
 // Dependencies
 const data = require('./data');
 const crypto = require('crypto');
-
+const tokens = require('./tokens');
 
 //Constants
 let dirName = 'users';
@@ -12,13 +12,14 @@ let dirName = 'users';
 
 // Creates user object
 // returns null if any argument is invalid 
-function createUser(phoneNumber, firstName, lastName, email, password ) {
+function createUser(phoneNumber, firstName, lastName, email, password, address ) {
   let user = {
+    'email' : email,
     'phoneNumber' : phoneNumber,
     'firstName' : firstName,
     'lastName' : lastName,
-    'email' : email,
     'password' : password,
+    'address' : address,
 
     delete() {
       if( !isValidPhone(this.phoneNumber) ) {
@@ -28,7 +29,7 @@ function createUser(phoneNumber, firstName, lastName, email, password ) {
     },
 
     store() {
-      return data.write(dirName, this.phoneNumber, {phoneNumber, firstName, lastName, email, password });
+      return data.write(dirName, this.phoneNumber, {'phoneNumber': this.phoneNumber, 'firstName': this.firstName, 'lastName': this.lastName, 'email': this.email, 'password': this.password });
     },
 
     update(newEmail, newFirstName, newLastName, newPassword) {
@@ -54,36 +55,52 @@ function createUser(phoneNumber, firstName, lastName, email, password ) {
       return this.store();
     },
 
-    // TODO
     login(phoneNumber, password) {
+      if (this.password != password) {
+        return Promise.reject('Passwords mismatch');
+      }
+      return tokens.createToken(phoneNumber);
+    },
+
+    logout(tokenID) {
+      return tokens.deleteToken(tokenID);
     },
 
     // TODO
-    logout(phoneNumber, password) {
-    },
+    placeOrder(tokenID, phoneNumber) {
+        // Token must be valid
+        // cart must exist;
+        // send formatted email
+        // send stripe shizzle
+    }
 
   };
 
-  if (!isValidNumber(user.phoneNumber) 
+  if (!isValidPhone(user.phoneNumber) 
       || !isValidName(user.firstName)
       || !isValidName(user.lastName)
       || !isValidPassword(user.password)
       || !isValidEmail(user.email)
     ) {
+      console.log(isValidPhone(user.phoneNumber),
+      isValidName(user.firstName),
+      isValidName(user.lastName),
+      isValidPassword(user.password),
+      isValidEmail(user.email));
       return null;
     }
   return user;
 }
 
 // returns user by reading it from the storage layer using the phone number
-function fetchUser(phoneNumber) {
-  if( !isValidPhone(phoneNumber) ) {
-    return Promise.reject('Invalid phone' + phoneNumber);
+function fetchUser(phone) {
+  if( !isValidPhone(phone) ) {
+    return Promise.reject('Invalid phone' + phone);
   }
 
   // let users = data.read(dirName, phoneNumber);
-  return data.read(dirName, phoneNumber)
-  .then(  userData => {return Promise.resolve( createUser(userData.phoneNumber, userData.firstName, userData.lastName, userData.email, userData.password))})
+  return data.read(dirName, phone)
+  .then(  userData => {return Promise.resolve( createUser(userData.phoneNumber, userData.firstName, userData.lastName, userData.email, userData.password, userData.address))})
   .catch( (err) => Promise.reject(err));
 }
 
@@ -100,12 +117,12 @@ function isValidPassword(password) {
 }
 
 function isValidName(name) {
-  return name.charAt(0).toUpperCase() == name.slice(1);;
+  return name.charAt(0).toUpperCase() === name.charAt(0);
 }
 
 function isValidEmail(email) {
   var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-  return re.test(String(email).toLowerCase());
+ return re.test(String(email).toLowerCase());
 }
 
 // TODO use this function
