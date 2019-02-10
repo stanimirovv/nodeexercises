@@ -2,6 +2,7 @@
  * dependencies
  */
 const data = require('./data');
+const tokens = require('./tokens');
 
 // TODO check phone number, move check 
 // TODO add is token valid

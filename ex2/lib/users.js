@@ -55,7 +55,7 @@ function createUser(phoneNumber, firstName, lastName, email, password, address )
       return this.store();
     },
 
-    login(phoneNumber, password) {
+    login(password) {
       if (this.password != password) {
         return Promise.reject('Passwords mismatch');
       }
