@@ -2,13 +2,9 @@
  * Private module, assumes email is already validated.
  */
 
-// TODO worker to cleanup old tokens
-
-
 /*
  * Dependencies
  */
-
 const data = require('./data');
 const crypto = require('crypto');
 
@@ -21,11 +17,9 @@ const tokenIDlength = 10;
 /*
  * Public interface
  */
-
 function token() {
 
   let token = {
-    
     createToken(phoneNumber) {
       let tokenID = getTokenID();
       let createdAtEpoch = Math.floor(new Date() / 1000); // seconds

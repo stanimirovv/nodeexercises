@@ -68,10 +68,26 @@ function createUser(phoneNumber, firstName, lastName, email, password, address )
 
     // TODO
     placeOrder(tokenID, phoneNumber) {
-        // Token must be valid
-        // cart must exist;
-        // send formatted email
-        // send stripe shizzle
+        //Get token
+        //validate        
+        //get cart
+        //count
+        //send email
+        //send invoice
+        tokens.fetchToken(tokenID)
+        .then( token => {
+          return tokens.isValid(token, phoneNumber) ? Promise.resolve('ok') : Promise.reject('Invalid token');
+        })
+        .then( ok => {
+          return carts.fetchCart(phoneNumber);
+        })
+        .then( cart =>{
+           // TODO computation 
+        })
+        .catch( err => {
+          console.log('Error placing order: ', err);
+        });
+
     }
 
   };

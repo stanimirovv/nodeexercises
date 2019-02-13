@@ -3,6 +3,11 @@
  */
 const tokens = require("./tokens");
 const users = require("./users");
+const carts = require("./carts");
+
+/*
+ * Constants
+ */
 
 // Define all the handlers
 const handlers = {};
@@ -17,20 +22,42 @@ handlers.notFound = (data) => {
 };
 
 handlers.user = (data) => {
-
-  // POST -> screateUser.store().then().reject();
-  // PUT -> fetchUser
-  // Route request depending on method
-  // Call method from users
-  // return { 'statusCode' : 404, 'payload': { 'msg': "Handler doesn't exist."}};
+  // Create user
+  if ( data.method === 'POST') {
+    let userData = JSON.parse( data.payload);
+    let newUser = users.createUser( userData.phone, userData.firstName, userData.lastName, userData.email, userData.password, userData.address);  
+    return newUser.store()
+    .then( ok => {
+      return { 'statusCode' : 200, 'payload' : 'User created, you may now login'};
+    })
+    .catch ( err => {
+      console.log('Error:', err);
+      return { 'statusCode' : 400, 'payload' : 'User cretion error'};
+    });
+  } else if ( data.method === 'PUT' ) { // TODO update
+  } else if (data.method === 'DELETE' ) {
+    let userData = JSON.parse(data.payload);
+    return users.fetchUser( userData.phone)
+    .then( user => {
+      return user.delete(); 
+    })
+    .then( ok => {
+      return { 'statusCode' : 200, 'payload' : 'User deleted'};
+    })
+    .catch( err => {
+      console.log('Error:', err);
+      return { 'statusCode' : 500, 'payload' : 'Error deleting user'};
+    });
+  }
 };
 
 handlers.items = (data) => {
-  
-  console.log("Headers: ", data.headers);
   let tokenID = data.headers.token;
-  //TODO validate token from here ?
   let phoneNumber = data.headers.phone;
+  if ( tokenID === undefined || phoneNumber === undefined) {
+      return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
+
   return tokens.fetchToken(tokenID)
   .then ( token => { 
     let authError = token === null || !tokens.isValid(token, phoneNumber);
@@ -38,7 +65,7 @@ handlers.items = (data) => {
       return { 'statusCode' : 400, 'payload' : 'Authentication error'};
     }
     else {
-  return { 'statusCode' : 200, 'payload' : "[{name: 'Special pizza', priceCents: 100},{name: 'Pizza 2', priceCents: 200},{name: 'Pizza 3', priceCents: 100},{name: 'Special pizza 2', priceCents: 100},]"};
+  return { 'statusCode' : 200, 'payload' : JSON.stringify(carts.items)};
     }
   })
   .catch( err => {
@@ -48,8 +75,15 @@ handlers.items = (data) => {
 };
 
 handlers.login = (data) => {
+  if ( data.method != 'POST' ) {
+    return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
+
   let phoneNumber = data.headers.phone;
   let password = data.headers.password;
+  if ( password === undefined || phoneNumber === undefined) {
+      return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
 
   return users.fetchUser(phoneNumber)
   .then ( user => {
@@ -65,8 +99,15 @@ handlers.login = (data) => {
 };
 
 handlers.logout = (data) => {
+  if ( data.method != 'POST' ) {
+    return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
+
   let phoneNumber = data.headers.phone;
   let tokenID = data.headers.token;
+  if ( tokenID === undefined || phoneNumber === undefined) {
+      return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
 
   return tokens.fetchToken(tokenID)
   .then ( token => { 
@@ -88,10 +129,62 @@ handlers.logout = (data) => {
   });
 };
 
-handlers.cart = (data) => {
+handlers.addToCart = (data) => {
+  let phoneNumber = data.headers.phone;
+  let tokenID = data.headers.token;
+  let payload = JSON.parse(data.payload);
+  let itemID = payload.itemID;
+  
+  console.log ( tokenID , phoneNumber, data.method );
+  if ( data.method != 'POST' ) {
+    return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
+
+  if ( tokenID === undefined || phoneNumber === undefined || itemID === undefined) {
+      return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
+  
+  return carts().addItemToCart(phoneNumber, itemID)
+  .then ( cart => { 
+    let payload = { 'cart': cart};
+    return {'statusCode' : 200, 'payload': JSON.stringify(payload)};
+  })
+  .catch( err => {
+      console.log( 'error: ', err);
+      return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  });
+};
+
+handlers.clearCart = (data) => {
+  if ( data.method != 'POST' ) {
+    return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
+
+  let phoneNumber = data.headers.phone;
+  let tokenID = data.headers.token;
+  if ( tokenID === undefined || phoneNumber === undefined) {
+      return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
+
+  return carts().clearCart(phoneNumber)
+  .then ( cart => { 
+    return {'statusCode' : 200, 'payload':'Item added'};
+  })
+  .catch( err => {
+      return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  });
 };
 
 handlers.placeOrder = (data) => {
+  if ( data.method != 'POST' ) {
+    return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
+
+  let phoneNumber = data.headers.phone;
+  let tokenID = data.headers.token;
+  if ( tokenID === undefined || phoneNumber === undefined) {
+      return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  }
 // POST
 // cart id
 // token
@@ -105,17 +198,14 @@ var router = {
   'items' : handlers.items,
   'login' : handlers.login,
   'logout' : handlers.logout,
-  'cart' : handlers.cart,
+  'addToCart' : handlers.addToCart,
+  'clearCart' : handlers.clearCart,
   'placeOrder' : handlers.user
 };
 
 function choose(path) {
   return typeof(router[path]) !== 'undefined' ? router[path] : handlers.notFound;
 }
-
-/*
- * private functions
- */
 
 /*
  * exports
