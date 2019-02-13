@@ -68,14 +68,6 @@ function carts() {
 }
 
 /*
- * Private functions
- */
-function getinvoiceHeader() {
-}
-
-function getinvoiceFooter() {
-}
-/*
  * module exports
  */
 module.exports = carts;
