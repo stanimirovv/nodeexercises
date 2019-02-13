@@ -1,13 +1,23 @@
 // Enviroments
 let env = {};
 env.staging = {
-  port : 8000
+  port : 8000,
+  email : {
+    hostname: 'api.mailgun.net',
+    path: '',
+    from: '',
+    secret: ''
+  },
+  payment : {
+    hostname: 'api.stripe.com',
+    path: '/v1/charges',
+    auth: ''
+  }
 };
 
 env.production = {
   port : 8000
 };
-
 
 // Pick and load env
 function pickConfig() {
