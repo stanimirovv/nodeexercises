@@ -196,15 +196,18 @@ handlers.placeOrder = (data) => {
   if ( data.method != 'POST' ) {
     return { 'statusCode' : 400, 'payload' : 'Authentication error'};
   }
-
   let phoneNumber = data.headers.phone;
   let tokenID = data.headers.token;
+
+  let payload = JSON.parse(data.payload);
+  let currency = payload.currency;
+  let payment_credentials = payload.payment_credentials;
   if ( tokenID === undefined || phoneNumber === undefined) {
       return { 'statusCode' : 400, 'payload' : 'Authentication error'};
   }
   return users.fetchUser( phoneNumber)
   .then( user => {
-    return user.placeOrder(tokenID);
+    return user.placeOrder(tokenID, currency, payment_credentials);
   })
   .then( ok => {
     return { 'statusCode' : 200, 'payload' : 'Order Placed'};

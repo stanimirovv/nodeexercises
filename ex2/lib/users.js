@@ -78,7 +78,8 @@ function createUser(phoneNumber, firstName, lastName, email, password, address )
       })
     },
 
-    placeOrder(tokenID) {
+    //usd, tok_visa for the dummy system
+    placeOrder(tokenID, currency, payment_credentials) {
       let cartSummedObj = {};
       tokens.fetchToken(tokenID)
       .then( token => {
@@ -92,7 +93,7 @@ function createUser(phoneNumber, firstName, lastName, email, password, address )
         return sendmail(this.email, cartSumObj.invoice);
       })
       .then( ok => {
-        return payment.bill(cartSummedObj.totalPriceCents, 'usd', 'tok_visa', cartSummedObj.invoice)
+        return payment.bill(cartSummedObj.totalPriceCents, currency, payment_credentials, cartSummedObj.invoice)
       })
     }
 
