@@ -24,7 +24,7 @@ handlers.notFound = (data) => {
 handlers.user = (data) => {
   // Create user
   if ( data.method === 'POST') {
-    let userData = JSON.parse( data.payload);
+    let userData = JSON.parse(data.payload);
     let newUser = users.createUser( userData.phone, userData.firstName, userData.lastName, userData.email, userData.password, userData.address);  
     return newUser.store()
     .then( ok => {
@@ -60,12 +60,12 @@ handlers.items = (data) => {
 
   return tokens.fetchToken(tokenID)
   .then ( token => { 
-    let authError = token === null || !tokens.isValid(token, phoneNumber);
+    let authError = (token === null || !tokens.isValid(token, phoneNumber));
     if (authError) {
       return { 'statusCode' : 400, 'payload' : 'Authentication error'};
     }
     else {
-  return { 'statusCode' : 200, 'payload' : JSON.stringify(carts.items)};
+      return { 'statusCode' : 200, 'payload' : JSON.stringify(carts.items)};
     }
   })
   .catch( err => {
@@ -111,7 +111,7 @@ handlers.logout = (data) => {
 
   return tokens.fetchToken(tokenID)
   .then ( token => { 
-    let authError = token === null || !tokens.isValid(token, phoneNumber);
+    let authError = (token === null || !tokens.isValid(token, phoneNumber));
     if (authError) {
       Promise.reject( { 'statusCode' : 400, 'payload' : 'Authentication error'});
     }
@@ -185,10 +185,16 @@ handlers.placeOrder = (data) => {
   if ( tokenID === undefined || phoneNumber === undefined) {
       return { 'statusCode' : 400, 'payload' : 'Authentication error'};
   }
-// POST
-// cart id
-// token
-// payment system token
+  return users.fetchUser( phoneNumber)
+  .then( user => {
+    return user.placeOrder(tokenID);
+  })
+  .then( ok => {
+    return { 'statusCode' : 200, 'payload' : 'Order Placed'};
+  })
+  .catch( err => {
+    return { 'statusCode' : 400, 'payload' : 'Authentication error'};
+  });
 };
 
 // Define the request router
@@ -200,7 +206,7 @@ var router = {
   'logout' : handlers.logout,
   'addToCart' : handlers.addToCart,
   'clearCart' : handlers.clearCart,
-  'placeOrder' : handlers.user
+  'placeOrder' : handlers.placeOrder
 };
 
 function choose(path) {

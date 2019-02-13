@@ -2,6 +2,9 @@
 const data = require('./data');
 const crypto = require('crypto');
 const tokens = require('./tokens');
+const carts = require('./carts');
+const sendmail = require('./sendmail');
+const payment = require('./payment');
 
 //Constants
 let dirName = 'users';
@@ -59,35 +62,38 @@ function createUser(phoneNumber, firstName, lastName, email, password, address )
       if (this.password != password) {
         return Promise.reject('Passwords mismatch');
       }
-      return tokens.createToken(phoneNumber);
+
+      // clearCart crates empty cart, so it can be created
+      return carts().clearCart(phoneNumber)
+      .then ( cart => {
+        return tokens.createToken(phoneNumber);
+      })
     },
 
     logout(tokenID) {
-      return tokens.deleteToken(tokenID);
+      // clear cart on logout
+      return carts().clearCart(phoneNumber)
+      .then ( cart => {
+        return tokens.deleteToken(tokenID);
+      })
     },
 
-    // TODO
-    placeOrder(tokenID, phoneNumber) {
-        //Get token
-        //validate        
-        //get cart
-        //count
-        //send email
-        //send invoice
-        tokens.fetchToken(tokenID)
-        .then( token => {
-          return tokens.isValid(token, phoneNumber) ? Promise.resolve('ok') : Promise.reject('Invalid token');
-        })
-        .then( ok => {
-          return carts.fetchCart(phoneNumber);
-        })
-        .then( cart =>{
-           // TODO computation 
-        })
-        .catch( err => {
-          console.log('Error placing order: ', err);
-        });
-
+    placeOrder(tokenID) {
+      let cartSummedObj = {};
+      tokens.fetchToken(tokenID)
+      .then( token => {
+        return tokens.isValid(token, this.phoneNumber) ? Promise.resolve('ok') : Promise.reject('Invalid token');
+      })
+      .then( ok => {
+        return carts().countCartSum(this.phoneNumber, tokenID);
+      })
+      .then( cartSumObj =>{
+        cartSummedObj = cartSumObj;
+        return sendmail(this.email, cartSumObj.invoice);
+      })
+      .then( ok => {
+        return payment.bill(cartSummedObj.totalPriceCents, 'usd', 'tok_visa', cartSummedObj.invoice)
+      })
     }
 
   };

@@ -51,11 +51,15 @@ function carts() {
     countCartSum(phoneNumber, cartItem) {
       return this.fetchCart(phoneNumber)
       .then( (cart) => { 
-         cart.push(cartItem);
-         return data.write(cartDir, phoneNumber, cart);
-      })
-      .then( ok => {
-        return this.fetchCart(phoneNumber);
+          let totalPriceCents = 0;
+          let invoice =  '';
+          for (let item of cart) {
+            totalPriceCents += item.priceCents;
+            // TODO this should be private func
+            invoice += item.name + '     ' + item.priceCents + '   \n';
+          }
+
+         return Promise.resolve( {'invoice': invoice, 'totalPriceCents': totalPriceCents} );
       });
     },
 
@@ -63,6 +67,14 @@ function carts() {
   return cart;
 }
 
+/*
+ * Private functions
+ */
+function getinvoiceHeader() {
+}
+
+function getinvoiceFooter() {
+}
 /*
  * module exports
  */
