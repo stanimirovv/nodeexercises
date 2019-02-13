@@ -35,6 +35,17 @@ handlers.user = (data) => {
       return { 'statusCode' : 400, 'payload' : 'User cretion error'};
     });
   } else if ( data.method === 'PUT' ) { // TODO update
+    return users.fetchUser( userData.phone)
+    .then( fetchedUser => {
+      return fetchedUser.upadte(userData.email, userData.firstName, userData.lastName, userData.password);
+    })
+    .then( ok => {
+      return { 'statusCode' : 200, 'payload' : 'User updated, you may now login'};
+    })
+    .catch( err => {
+      console.log('Error: ', err);
+      return { 'statusCode' : 400, 'payload' : 'User update error'};
+    })
   } else if (data.method === 'DELETE' ) {
     let userData = JSON.parse(data.payload);
     return users.fetchUser( userData.phone)
