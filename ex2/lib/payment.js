@@ -1,5 +1,12 @@
 /*
- * Billing module, handles transport layer, no business logic
+ * Billing module
+ * the API hides the external system
+ * Required configuration:
+ *  - stripe path
+ *  - stripe url 
+ *  - stripe secret
+ *
+ *  retrurns a promise
  */
 
 /*

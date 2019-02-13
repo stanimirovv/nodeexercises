@@ -1,8 +1,4 @@
 /*
- * Private module, assumes email is already validated.
- */
-
-/*
  * Dependencies
  */
 const data = require('./data');

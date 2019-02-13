@@ -11,15 +11,15 @@ const carts = require("./carts");
 
 // Define all the handlers
 const handlers = {};
-// Sample handler
-handlers.hello = (data,callback) => {
-  return {'statusCode' : 200, 'payload':{'greeting' :'Hello, user!'}};
-};
 
 // Not found handler
 handlers.notFound = (data) => {
   return { 'statusCode' : 404, 'payload': { 'msg': "Handler doesn't exist."}};
 };
+
+/*
+ * users
+ */
 
 handlers.user = (data) => {
   // Create user
@@ -51,6 +51,9 @@ handlers.user = (data) => {
   }
 };
 
+/*
+ * Items, login/logout
+ */
 handlers.items = (data) => {
   let tokenID = data.headers.token;
   let phoneNumber = data.headers.phone;
@@ -129,6 +132,9 @@ handlers.logout = (data) => {
   });
 };
 
+/*
+ * Cart handlers
+ */
 handlers.addToCart = (data) => {
   let phoneNumber = data.headers.phone;
   let tokenID = data.headers.token;

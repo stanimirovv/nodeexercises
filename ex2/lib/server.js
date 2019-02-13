@@ -14,14 +14,6 @@ const tokens = require('./tokens');
 const cart = require('./carts');
 const payment = require('./payment');
 
-// payment.bill('100', 'usd', 'tok_visa', 'Test bill')
-// .then( ok => {
-//   console.log( 'BILLED OK!');
-// })
-// .catch( err => {
-//   console.log('Error billing: ', err);
-// });
-
 /*
  * Public interface
  */
